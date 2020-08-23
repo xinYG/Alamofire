@@ -29,12 +29,12 @@ import XCTest
 final class RequestResponseTestCase: BaseTestCase {
     func testRequestResponse() {
         // Given
-        let urlString = "\(String.httpBinURLString)/get"
-        let expectation = self.expectation(description: "GET request should succeed: \(urlString)")
+        let url = Endpoint.get.url
+        let expectation = self.expectation(description: "GET request should succeed: \(url)")
         var response: DataResponse<Data?, AFError>?
 
         // When
-        AF.request(urlString, parameters: ["foo": "bar"])
+        AF.request(url, parameters: ["foo": "bar"])
             .response { resp in
                 response = resp
                 expectation.fulfill()
@@ -51,16 +51,16 @@ final class RequestResponseTestCase: BaseTestCase {
 
     func testRequestResponseWithProgress() {
         // Given
-        let randomBytes = 1 * 25 * 1024
-        let urlString = "\(String.httpBinURLString)/bytes/\(randomBytes)"
+        let byteCount = 1 * 25 * 1024
+        let url = Endpoint.bytes(byteCount).url
 
-        let expectation = self.expectation(description: "Bytes download progress should be reported: \(urlString)")
+        let expectation = self.expectation(description: "Bytes download progress should be reported: \(url)")
 
         var progressValues: [Double] = []
         var response: DataResponse<Data?, AFError>?
 
         // When
-        AF.request(urlString)
+        AF.request(url)
             .downloadProgress { progress in
                 progressValues.append(progress.fractionCompleted)
             }
@@ -93,7 +93,6 @@ final class RequestResponseTestCase: BaseTestCase {
 
     func testPOSTRequestWithUnicodeParameters() {
         // Given
-        let urlString = "\(String.httpBinURLString)/post"
         let parameters = ["french": "français",
                           "japanese": "日本語",
                           "arabic": "العربية",
@@ -104,7 +103,7 @@ final class RequestResponseTestCase: BaseTestCase {
         var response: DataResponse<Any, AFError>?
 
         // When
-        AF.request(urlString, method: .post, parameters: parameters)
+        AF.request(Endpoint.method(.post), method: .post, parameters: parameters)
             .responseJSON { closureResponse in
                 response = closureResponse
                 expectation.fulfill()
@@ -130,8 +129,6 @@ final class RequestResponseTestCase: BaseTestCase {
     #if !SWIFT_PACKAGE
     func testPOSTRequestWithBase64EncodedImages() {
         // Given
-        let urlString = "\(String.httpBinURLString)/post"
-
         let pngBase64EncodedString: String = {
             let URL = url(forResource: "unicorn", withExtension: "png")
             let data = try! Data(contentsOf: URL)
@@ -155,7 +152,7 @@ final class RequestResponseTestCase: BaseTestCase {
         var response: DataResponse<Any, AFError>?
 
         // When
-        AF.request(urlString, method: .post, parameters: parameters)
+        AF.request(Endpoint.method(.post), method: .post, parameters: parameters)
             .responseJSON { closureResponse in
                 response = closureResponse
                 expectation.fulfill()
@@ -189,7 +186,7 @@ final class RequestResponseTestCase: BaseTestCase {
         var response: DataResponse<Any, AFError>?
 
         // When
-        manager.request(URLRequest.makeHTTPBinRequest()).responseJSON { resp in
+        manager.request(Endpoint.get).responseJSON { resp in
             response = resp
             expectation.fulfill()
         }
@@ -209,7 +206,7 @@ final class RequestResponseTestCase: BaseTestCase {
         var response: DataResponse<Any, AFError>?
 
         // When
-        manager.request(URLRequest.makeHTTPBinRequest()).responseJSON { resp in
+        manager.request(Endpoint.get).responseJSON { resp in
             response = resp
             expectation.fulfill()
         }

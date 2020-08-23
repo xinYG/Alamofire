@@ -45,6 +45,53 @@ extension URL {
     }
 }
 
+struct Endpoint {
+    static var get: Endpoint { method(.get) }
+
+    static func method(_ method: HTTPMethod) -> Endpoint {
+        Endpoint(path: method.rawValue.lowercased(), method: method)
+    }
+
+    static func delay(_ interval: Int, method: HTTPMethod = .get) -> Endpoint {
+        Endpoint(path: "delay/\(interval)", method: method)
+    }
+
+    static func bytes(_ count: Int) -> Endpoint {
+        Endpoint(path: "bytes/\(count)")
+    }
+
+    private(set) var path = "get"
+    private(set) var method: HTTPMethod = .get
+    private(set) var headers: HTTPHeaders = .init()
+    private(set) var timeout: TimeInterval = 60
+    private(set) var cachePolicy: URLRequest.CachePolicy = .useProtocolCachePolicy
+
+    func timeout(_ timeout: TimeInterval) -> Endpoint {
+        var copy = self
+        copy.timeout = timeout
+
+        return copy
+    }
+}
+
+extension Endpoint: URLRequestConvertible {
+    var urlRequest: URLRequest { try! asURLRequest() }
+
+    func asURLRequest() throws -> URLRequest {
+        URLRequest.makeHTTPBinRequest(path: path,
+                                      method: method,
+                                      headers: headers,
+                                      timeout: timeout,
+                                      cachePolicy: cachePolicy)
+    }
+}
+
+extension Endpoint: URLConvertible {
+    var url: URL { try! asURL() }
+
+    func asURL() throws -> URL { try asURLRequest().url! }
+}
+
 extension URLRequest {
     static func makeHTTPBinRequest(path: String = "get",
                                    method: HTTPMethod = .get,
